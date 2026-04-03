@@ -20,7 +20,7 @@ function ProtectedRoute({ children }) {
 
   if (loading) return <Loader />;
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.is_approved) return <WaitingList />;
+  if (!user.is_approved && !user.is_superadmin) return <WaitingList />;
 
   return (
     <>
@@ -34,7 +34,7 @@ function PublicRoute({ children }) {
   const { user, loading } = useAuth();
 
   if (loading) return <Loader />;
-  if (user && user.is_approved) return <Navigate to="/groups" replace />;
+  if (user && (user.is_approved || user.is_superadmin)) return <Navigate to="/groups" replace />;
 
   return children;
 }
