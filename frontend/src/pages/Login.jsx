@@ -1,6 +1,9 @@
+import React from 'react';
+import { API_URL } from '../api/client';
+
 export default function Login() {
   const handleLogin = () => {
-    window.location.href = 'http://localhost:3001/auth/google';
+    window.location.href = `${API_URL}/auth/google`;
   };
 
   return (
