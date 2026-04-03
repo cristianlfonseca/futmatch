@@ -1,0 +1,19 @@
+
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: futmatch_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: futmatch
+      POSTGRES_PASSWORD: futmatch123
+      POSTGRES_DB: futmatch
+    ports:
+      - "5433:5432"
+    volumes:
+      - futmatch_data:/var/lib/postgresql/data
+      - ./backend/db/migrations/001_initial.sql:/docker-entrypoint-initdb.d/001_initial.sql
+
+volumes:
+  futmatch_data:
