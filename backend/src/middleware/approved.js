@@ -20,6 +20,11 @@ async function requireApproval(req, res, next) {
     }
 
     if (!result.rows[0].is_approved) {
+      // Allow Superadmin to bypass the database approval flag
+      if (process.env.SUPERADMIN_EMAIL && req.user.email === process.env.SUPERADMIN_EMAIL) {
+        return next();
+      }
+
       return res.status(403).json({
         error: 'Acesso não autorizado.',
         message: 'Sua conta está na lista de espera. Aguarde aprovação do administrador.',
