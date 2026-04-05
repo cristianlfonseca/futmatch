@@ -26,16 +26,27 @@ async function migrate() {
       );
     `);
 
-    // 2. Legacy check: If 'users' table exists but tracking is empty
-    const usersCheck = await client.query(`
-      SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users');
-    `);
-    const { rows: appliedRows } = await client.query('SELECT filename FROM _migrations');
-    if (appliedRows.length === 0 && usersCheck.rows[0].exists) {
-      console.log('📦 Legacy database detected. Marking existing files as applied.');
-      for (const f of files) {
-        await client.query(`INSERT INTO _migrations (filename) VALUES ($1) ON CONFLICT DO NOTHING`, [f]);
-      }
+    // 2. Legacy Healing Check
+    // If the database has tables but migrations were skipped incorrectly, we heal the tracking table.
+    const usersCheck = await client.query(`SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')`);
+    if (usersCheck.rows[0].exists) {
+      await client.query(`INSERT INTO _migrations (filename) VALUES ('001_initial.sql') ON CONFLICT DO NOTHING`);
+    }
+
+    const skillCheck = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name='group_users' AND column_name='skill_level'`);
+    if (skillCheck.rows.length === 0) {
+      // 002 hasn't actually run! Remove from tracking if it was falsely added
+      await client.query(`DELETE FROM _migrations WHERE filename = '002_phase10.sql'`);
+    } else {
+      await client.query(`INSERT INTO _migrations (filename) VALUES ('002_phase10.sql') ON CONFLICT DO NOTHING`);
+    }
+
+    const waitlistCheck = await client.query(`SELECT column_name FROM information_schema.columns WHERE table_name='match_checkins' AND column_name='is_waitlist'`);
+    if (waitlistCheck.rows.length === 0) {
+      // 003 hasn't actually run! Remove from tracking if it was falsely added
+      await client.query(`DELETE FROM _migrations WHERE filename = '003_phase11.sql'`);
+    } else {
+      await client.query(`INSERT INTO _migrations (filename) VALUES ('003_phase11.sql') ON CONFLICT DO NOTHING`);
     }
 
     // 3. Re-select applied migrations
