@@ -14,7 +14,7 @@ router.use(authenticate, requireApproval);
 router.post('/api/matches/:id/events', async (req, res) => {
   const { user_id, event_type, quantity } = req.body;
 
-  const validTypes = ['goal', 'assist', 'yellow_card', 'red_card', 'mvp'];
+  const validTypes = ['goal', 'assist', 'yellow_card', 'red_card', 'mvp', 'save', 'tackle', 'error', 'dribble'];
   if (!validTypes.includes(event_type)) {
     return res.status(400).json({ error: 'Tipo de evento inválido.' });
   }
