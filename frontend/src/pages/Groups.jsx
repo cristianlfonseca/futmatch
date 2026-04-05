@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../api/client';
 import Loader from '../components/Loader';
+import { useAuth } from '../context/AuthContext';
 
 export default function Groups() {
+  const { user } = useAuth();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
@@ -52,6 +54,21 @@ export default function Groups() {
           {showCreate ? '✕ Cancelar' : '+ Novo Grupo'}
         </button>
       </div>
+
+      {/* Pending Votes Alert */}
+      {user?.pending_votes && user.pending_votes.length > 0 && (
+        <div className="bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/40 rounded-2xl p-4 mb-6 shadow-[0_4px_20px_var(--color-warning)]/10 animate-pulse-slow flex items-center justify-between">
+          <div>
+            <h3 className="text-[var(--color-warning)] font-bold text-sm mb-1 flex items-center gap-2">
+              ⭐ Avaliações Pendentes
+            </h3>
+            <p className="text-[10px] text-[var(--color-warning)]/80 pr-2">Tem {user.pending_votes.length} pelada(s) recente aguardando o seu voto nas últimas 24 hrs!</p>
+          </div>
+          <Link to={`/matches/${user.pending_votes[0].id}`} className="px-3 py-2 bg-[var(--color-warning)] rounded-lg flex-shrink-0 text-[var(--color-bg-body)] font-bold text-[10px] hover:bg-[var(--color-warning)]/80 no-underline shadow-sm uppercase tracking-wide">
+            Votar Agora
+          </Link>
+        </div>
+      )}
 
       {/* Create form */}
       {showCreate && (

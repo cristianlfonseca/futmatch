@@ -317,10 +317,21 @@ export default function MatchDay() {
 
       {/* Action buttons */}
       <div className="flex gap-2 mb-6 flex-wrap">
-        {(match.status === 'finished' || match.status === 'in_progress') && isConfirmed && (
-          <button onClick={() => setShowVoting(!showVoting)} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-warning)]/10 text-[var(--color-warning)] hover:bg-[var(--color-warning)]/20 cursor-pointer">
-            ⭐ Avaliar Jogadores
-          </button>
+        {match.status === 'finished' && isConfirmed && (
+          (Date.now() - new Date(match.match_date).getTime()) / (1000 * 60 * 60) <= 24 ? (
+            <button onClick={() => setShowVoting(!showVoting)} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-warning)]/10 text-[var(--color-warning)] hover:bg-[var(--color-warning)]/20 cursor-pointer shadow-[0_0_10px_var(--color-warning)] shadow-warning/20">
+              ⭐ Avaliar Jogadores (Aberto)
+            </button>
+          ) : (
+            <div className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-text-muted)]/10 text-[var(--color-text-muted)]">
+              ⏳ Avaliações Encerradas
+            </div>
+          )
+        )}
+        {match.status === 'in_progress' && isConfirmed && (
+          <div className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-text-muted)]/10 text-[var(--color-text-muted)] border border-dashed border-[var(--color-border)]">
+             ⏳ Avaliação abre no fim da partida
+          </div>
         )}
         {isAdmin && match.status === 'scheduled' && (
           <>
@@ -522,9 +533,9 @@ export default function MatchDay() {
               return (
                 <div key={ev.id} className="flex items-center justify-between bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg px-3 py-2">
                   <div className="flex items-center gap-2 text-sm">
-                    <span>{typeInfo?.label.split(' ')[0]}</span>
-                    <span className="font-medium">{ev.display_name || ev.name}</span>
-                    {ev.quantity > 1 && <span className="text-[var(--color-text-muted)]">×{ev.quantity}</span>}
+                    <span className="font-bold text-[var(--color-accent)]">{typeInfo?.label || ev.event_type}</span>
+                    <span className="font-medium text-[var(--color-text-primary)]">👉 {ev.display_name || ev.name}</span>
+                    {ev.quantity > 1 && <span className="text-[var(--color-text-muted)] bg-[var(--color-bg-input)] px-1.5 rounded-md text-xs font-bold">×{ev.quantity}</span>}
                   </div>
                   {isAdmin && (
                     <button onClick={() => deleteEvent(ev.id)} className="text-[var(--color-text-muted)] hover:text-[var(--color-danger)] text-xs cursor-pointer">✕</button>

@@ -61,6 +61,21 @@ router.get('/auth/me', authenticate, async (req, res) => {
     const user = result.rows[0];
     const isSuperadmin = user.email === process.env.SUPERADMIN_EMAIL;
 
+    // Check for pending votes (matches ended in last 24h, user confirmed, but no rating submitted yet)
+    const pendingVotesQuery = await db.query(`
+      SELECT m.id, m.group_id, m.title
+      FROM match_checkins mc
+      JOIN matches m ON m.id = mc.match_id
+      WHERE mc.user_id = $1 
+        AND mc.confirmed = true 
+        AND m.status = 'finished'
+        AND m.match_date >= NOW() - INTERVAL '24 hours'
+        AND NOT EXISTS (
+          SELECT 1 FROM player_ratings pr 
+          WHERE pr.match_id = m.id AND pr.rater_id = mc.user_id
+        )
+    `, [req.user.id]);
+
     res.json({
       id: user.id,
       email: user.email,
@@ -68,6 +83,7 @@ router.get('/auth/me', authenticate, async (req, res) => {
       avatar_url: user.avatar_url,
       is_approved: user.is_approved,
       is_superadmin: isSuperadmin,
+      pending_votes: pendingVotesQuery.rows,
       created_at: user.created_at,
       profile: user.display_name
         ? {

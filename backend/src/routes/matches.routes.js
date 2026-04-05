@@ -295,6 +295,21 @@ router.post('/api/matches/:id/rate', async (req, res) => {
     const client = await db.pool.connect();
     try {
       await client.query('BEGIN');
+
+      const matchRes = await client.query('SELECT match_date, status FROM matches WHERE id = $1', [matchId]);
+      const match = matchRes.rows[0];
+      
+      if (!match || match.status !== 'finished') {
+        throw new Error('A partida ainda não foi finalizada.');
+      }
+
+      // Check 24-h limit
+      const matchDateMs = new Date(match.match_date).getTime();
+      const hoursPassed = (Date.now() - matchDateMs) / (1000 * 60 * 60);
+      if (hoursPassed > 24) {
+        throw new Error('O tempo limite de 24 horas para avaliações expirou.');
+      }
+
       for (const r of ratings) {
         if (!r.rating || r.rating < 0 || r.rating > 5) continue;
         await client.query(
@@ -315,7 +330,7 @@ router.post('/api/matches/:id/rate', async (req, res) => {
     }
   } catch (err) {
     console.error('POST /rate error:', err);
-    res.status(500).json({ error: 'Erro ao salvar avaliações.' });
+    res.status(400).json({ error: err.message || 'Erro ao salvar avaliações.' });
   }
 });
 
