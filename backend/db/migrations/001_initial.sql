@@ -17,14 +17,17 @@ CREATE TABLE users (
 
 -- ========== PLAYER PROFILES ==========
 CREATE TABLE player_profiles (
-  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  user_id       UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
-  display_name  VARCHAR(100) NOT NULL,
-  birth_date    DATE,
-  position      VARCHAR(20) CHECK (position IN (
-                    'Goleiro','Zagueiro','Lateral','Meia','Atacante')),
-  skill_level   SMALLINT CHECK (skill_level BETWEEN 1 AND 5),
-  created_at    TIMESTAMPTZ DEFAULT NOW()
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id        UUID UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+  display_name   VARCHAR(100) NOT NULL,
+  birth_date     DATE,
+  position       VARCHAR(20) CHECK (position IN (
+                     'Goleiro','Zagueiro','Lateral','Meia','Atacante')),
+  skill_level    SMALLINT CHECK (skill_level BETWEEN 1 AND 5),
+  height         NUMERIC(3,2),
+  weight         NUMERIC(5,2),
+  dominant_foot  VARCHAR(10) CHECK (dominant_foot IN ('Direito', 'Esquerdo', 'Ambidestro')),
+  created_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
 -- ========== GROUPS ==========
@@ -63,18 +66,20 @@ CREATE TABLE matches (
   group_id    UUID REFERENCES groups(id) ON DELETE CASCADE,
   title       VARCHAR(100) DEFAULT 'Dia do Fut',
   match_date  TIMESTAMPTZ NOT NULL,
+  max_players SMALLINT DEFAULT 14,
   status      VARCHAR(20) DEFAULT 'scheduled'
                 CHECK (status IN ('scheduled','checkin','in_progress','finished')),
   created_at  TIMESTAMPTZ DEFAULT NOW()
 );
 
 CREATE TABLE match_checkins (
-  id         UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  match_id   UUID REFERENCES matches(id) ON DELETE CASCADE,
-  user_id    UUID REFERENCES users(id) ON DELETE CASCADE,
-  confirmed  BOOLEAN DEFAULT TRUE,
-  team       SMALLINT,
-  checked_at TIMESTAMPTZ DEFAULT NOW(),
+  id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  match_id    UUID REFERENCES matches(id) ON DELETE CASCADE,
+  user_id     UUID REFERENCES users(id) ON DELETE CASCADE,
+  confirmed   BOOLEAN DEFAULT TRUE,
+  is_waitlist BOOLEAN DEFAULT FALSE,
+  team        SMALLINT,
+  checked_at  TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE (match_id, user_id)
 );
 
@@ -84,9 +89,19 @@ CREATE TABLE match_events (
   match_id   UUID REFERENCES matches(id) ON DELETE CASCADE,
   user_id    UUID REFERENCES users(id),
   event_type VARCHAR(20) CHECK (event_type IN (
-                 'goal','assist','yellow_card','red_card','mvp')),
+                 'goal','assist','yellow_card','red_card','mvp', 'save', 'tackle', 'error', 'dribble')),
   quantity   SMALLINT DEFAULT 1,
   created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE player_ratings (
+  id             UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  match_id       UUID REFERENCES matches(id) ON DELETE CASCADE,
+  rater_id       UUID REFERENCES users(id) ON DELETE CASCADE,
+  rated_user_id  UUID REFERENCES users(id) ON DELETE CASCADE,
+  rating         NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
+  created_at     TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (match_id, rater_id, rated_user_id)
 );
 
 -- ========== INDEXES ==========
