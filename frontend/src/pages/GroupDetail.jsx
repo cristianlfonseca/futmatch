@@ -311,7 +311,11 @@ export default function GroupDetail() {
         <div className="space-y-2">
           {members.map((m) => (
             <div key={m.user_id} className="relative">
-              <PlayerCard player={m} compact />
+              <PlayerCard 
+                player={m} 
+                compact 
+                className={myRole !== 'member' && m.user_id !== user.id && m.role !== 'owner' ? 'pr-20' : ''} 
+              />
               
               {/* RBAC Controls */}
               {myRole === 'owner' && m.role !== 'owner' && (

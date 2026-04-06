@@ -1,13 +1,13 @@
 import { POSITIONS } from '../utils/constants';
 
-export default function PlayerCard({ player, compact = false, draggable = false }) {
+export default function PlayerCard({ player, compact = false, draggable = false, className = '' }) {
   const posInfo = POSITIONS.find((p) => p.value === player.position);
 
   return (
     <div
       className={`flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-card)] transition-all hover:border-[var(--color-accent)]/40 hover:shadow-[var(--shadow-glow)] ${
         compact ? 'px-3 py-2' : 'px-4 py-3'
-      } ${draggable ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      } ${draggable ? 'cursor-grab active:cursor-grabbing' : ''} ${className}`}
     >
       {/* Avatar */}
       <div className="relative flex-shrink-0">

@@ -236,7 +236,11 @@ router.post('/api/matches/:id/balance-teams', async (req, res) => {
     // Get confirmed players with profiles
     const players = await db.query(
       `SELECT mc.id as checkin_id, mc.user_id,
-              u.name, pp.display_name, pp.position, pp.skill_level
+              u.name, pp.display_name, pp.position, 
+              COALESCE(
+                 (SELECT ROUND(AVG(rating)) FROM player_ratings WHERE rated_user_id = u.id),
+                 pp.skill_level
+              ) as skill_level
        FROM match_checkins mc
        JOIN users u ON u.id = mc.user_id
        LEFT JOIN player_profiles pp ON pp.user_id = u.id

@@ -98,7 +98,11 @@ router.get('/api/groups/:id', async (req, res) => {
     const membersResult = await db.query(
       `SELECT gm.role, gm.joined_at,
               u.id as user_id, u.name, u.email, u.avatar_url,
-              pp.display_name, pp.position, pp.skill_level
+              pp.display_name, pp.position, 
+              COALESCE(
+                 (SELECT ROUND(AVG(rating)) FROM player_ratings WHERE rated_user_id = u.id),
+                 pp.skill_level
+              ) as skill_level
        FROM group_members gm
        JOIN users u ON u.id = gm.user_id
        LEFT JOIN player_profiles pp ON pp.user_id = u.id

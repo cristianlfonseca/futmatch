@@ -47,7 +47,11 @@ router.get('/auth/me', authenticate, async (req, res) => {
   try {
     const result = await db.query(
       `SELECT u.id, u.email, u.name, u.avatar_url, u.is_approved, u.created_at,
-              pp.display_name, pp.birth_date, pp.position, pp.skill_level
+              pp.display_name, pp.birth_date, pp.position, 
+              COALESCE(
+                 (SELECT ROUND(AVG(rating)) FROM player_ratings WHERE rated_user_id = u.id),
+                 pp.skill_level
+              ) as skill_level
        FROM users u
        LEFT JOIN player_profiles pp ON pp.user_id = u.id
        WHERE u.id = $1`,
