@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -41,6 +41,7 @@ function SortablePlayer({ player }) {
 
 export default function MatchDay() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [match, setMatch] = useState(null);
   const [checkins, setCheckins] = useState([]);
@@ -206,6 +207,17 @@ export default function MatchDay() {
     }
   }
 
+  async function handleDeleteMatch() {
+    if (!confirm('🚨 ATENÇÃO: Deseja excluir a partida INTEIRA? Isso apagará todos os gols, notas e check-ins para sempre!')) return;
+    try {
+       await api.delete(`/api/matches/${id}`);
+       alert('Partida excluída com sucesso.');
+       navigate(`/groups/${match.group_id}`, { replace: true });
+    } catch (err) {
+       alert(err.response?.data?.error || 'Erro ao excluir partida.');
+    }
+  }
+
   if (loading) return <Loader />;
   if (!match) return <div className="pt-20 px-4 text-center text-[var(--color-text-muted)]">Partida não encontrada.</div>;
 
@@ -361,6 +373,11 @@ export default function MatchDay() {
         {isAdmin && (
           <button onClick={() => setShowEventForm(!showEventForm)} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 cursor-pointer mt-1 w-full">
             📝 Lançar Evento Manual
+          </button>
+        )}
+        {isAdmin && (
+          <button onClick={handleDeleteMatch} className="px-3 py-2 rounded-xl text-xs font-medium bg-[var(--color-danger)]/10 text-[var(--color-danger)] hover:bg-[var(--color-danger)]/20 transition-all cursor-pointer mt-3 w-full border border-dashed border-[var(--color-danger)]/20">
+            🗑 Excluir Partida Definitivamente
           </button>
         )}
       </div>

@@ -450,4 +450,34 @@ router.post('/api/matches/:id/finish', async (req, res) => {
   }
 });
 
+// ---- Delete a match ----
+router.delete('/api/matches/:id', async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    // 1. Get match to check group_id
+    const matchRes = await db.query('SELECT group_id FROM matches WHERE id = $1', [id]);
+    const match = matchRes.rows[0];
+    if (!match) return res.status(404).json({ error: 'Partida não encontrada.' });
+
+    // 2. Auth check (must be admin or owner of the group)
+    const roleCheck = await db.query(
+      'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [match.group_id, req.user.id]
+    );
+    const myRole = roleCheck.rows[0]?.role;
+    if (myRole !== 'owner' && myRole !== 'admin') {
+      return res.status(403).json({ error: 'Acesso negado. Apenas admins podem excluir a partida.' });
+    }
+
+    // 3. Delete match (this cascades and deletes checkins, ratings, events)
+    await db.query('DELETE FROM matches WHERE id = $1', [id]);
+    
+    res.json({ message: 'Partida excluída com sucesso.' });
+  } catch (err) {
+    console.error('DELETE /matches/:id error:', err);
+    res.status(500).json({ error: 'Erro interno ao excluir partida.' });
+  }
+});
+
 module.exports = router;
