@@ -13,6 +13,7 @@ import GroupDetail from './pages/GroupDetail';
 import GroupJoin from './pages/GroupJoin';
 import Invites from './pages/Invites';
 import MatchDay from './pages/MatchDay';
+import PublicProfile from './pages/PublicProfile';
 import AdminDashboard from './pages/AdminDashboard';
 
 function ProtectedRoute({ children }) {
@@ -55,6 +56,7 @@ export default function App() {
           <Route path="/groups/:id/join" element={<ProtectedRoute><GroupJoin /></ProtectedRoute>} />
           <Route path="/invites" element={<ProtectedRoute><Invites /></ProtectedRoute>} />
           <Route path="/matches/:id" element={<ProtectedRoute><MatchDay /></ProtectedRoute>} />
+          <Route path="/users/:id/profile" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
 
           {/* Fallback */}

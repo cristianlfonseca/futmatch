@@ -511,7 +511,9 @@ export default function MatchDay() {
                       {(p.display_name || p.name || '?')[0]}
                     </div>
                   )}
-                  <span className="text-sm font-medium flex-1">{p.display_name || p.name}</span>
+                  <Link to={`/users/${p.user_id}/profile`} className="text-sm font-medium flex-1 hover:text-[var(--color-accent)] transition-colors line-clamp-1 no-underline">
+                    {p.display_name || p.name}
+                  </Link>
                   {isAdmin && p.user_id !== user?.id && (
                      <button onClick={() => kickPlayer(p.user_id)} className="text-[var(--color-danger)] opacity-70 hover:opacity-100 p-1 font-bold">✕</button>
                   )}
@@ -529,7 +531,9 @@ export default function MatchDay() {
           <div className="space-y-2 opacity-70">
             {waitlistPlayers.map((p) => (
               <div key={p.user_id} className="flex items-center gap-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-                <span className="text-xs font-medium flex-1">{p.display_name || p.name}</span>
+                <Link to={`/users/${p.user_id}/profile`} className="text-xs font-medium flex-1 hover:text-[var(--color-accent)] transition-colors line-clamp-1 no-underline">
+                   {p.display_name || p.name}
+                </Link>
                   {isAdmin && p.user_id !== user?.id && (
                      <button onClick={() => kickPlayer(p.user_id)} className="text-[var(--color-danger)] opacity-70 hover:opacity-100 p-1 font-bold text-xs">✕</button>
                   )}

@@ -11,6 +11,33 @@ const router = Router();
 // All profile routes require auth + approval
 router.use(authenticate, requireApproval);
 
+// ---- Get public profile of any user ----
+router.get('/api/users/:id/profile', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT u.id, u.name, u.avatar_url,
+              pp.display_name, pp.birth_date, pp.height, pp.weight, pp.dominant_foot, pp.position, 
+              COALESCE(
+                 (SELECT ROUND(AVG(rating)) FROM player_ratings WHERE rated_user_id = u.id),
+                 pp.skill_level
+              ) as skill_level
+       FROM users u
+       LEFT JOIN player_profiles pp ON pp.user_id = u.id
+       WHERE u.id = $1`,
+      [req.params.id]
+    );
+
+    if (!result.rows[0]) {
+      return res.status(404).json({ error: 'Usuário não encontrado.' });
+    }
+
+    res.json({ profile: result.rows[0] });
+  } catch (err) {
+    console.error('GET /api/users/:id/profile error:', err);
+    res.status(500).json({ error: 'Erro interno do servidor.' });
+  }
+});
+
 // ---- Get my profile ----
 router.get('/api/profile', async (req, res) => {
   try {
