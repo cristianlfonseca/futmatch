@@ -134,6 +134,9 @@ router.post('/api/matches/:id/checkin', async (req, res) => {
     if (!match.rows[0]) {
       return res.status(404).json({ error: 'Partida não encontrada.' });
     }
+    if (match.rows[0].status !== 'scheduled') {
+      return res.status(403).json({ error: 'O check-in já foi encerrado. A partida está em andamento ou finalizada.' });
+    }
 
     // Check membership
     const memberCheck = await db.query(
@@ -345,11 +348,49 @@ router.post('/api/matches/:id/start', async (req, res) => {
     if (!memberCheck.rows[0]) {
       return res.status(403).json({ error: 'Apenas dono ou admin pode iniciar a partida.' });
     }
+    
+    const count = await db.query('SELECT COUNT(*) as c FROM match_checkins WHERE match_id = $1 AND confirmed = true', [matchId]);
+    if (parseInt(count.rows[0].c, 10) === 0) {
+      return res.status(400).json({ error: 'Impossível iniciar partida sem jogadores confirmados.' });
+    }
+
     await db.query("UPDATE matches SET status = 'in_progress' WHERE id = $1", [matchId]);
     res.json({ message: 'Partida iniciada!' });
   } catch (err) {
     console.error('POST /start error:', err);
     res.status(500).json({ error: 'Erro ao iniciar partida.' });
+  }
+});
+
+// ---- Admin Kick Player from Match ----
+router.delete('/api/matches/:id/checkins/:userId', async (req, res) => {
+  try {
+    const matchId = req.params.id;
+    const { userId } = req.params;
+
+    const memberCheck = await db.query(
+      "SELECT role FROM group_members gm JOIN matches m ON m.group_id = gm.group_id WHERE m.id = $1 AND gm.user_id = $2 AND gm.role IN ('owner', 'admin')",
+      [matchId, req.user.id]
+    );
+    if (!memberCheck.rows[0]) {
+      return res.status(403).json({ error: 'Apenas dono ou admin pode remover jogadores da partida.' });
+    }
+
+    const existing = await db.query('SELECT confirmed FROM match_checkins WHERE match_id = $1 AND user_id = $2', [matchId, userId]);
+    if (existing.rows[0]) {
+      if (existing.rows[0].confirmed) {
+        const firstWaitlist = await db.query('SELECT id FROM match_checkins WHERE match_id = $1 AND is_waitlist = true ORDER BY checked_at ASC LIMIT 1', [matchId]);
+        if (firstWaitlist.rows[0]) {
+          await db.query('UPDATE match_checkins SET is_waitlist = false, confirmed = true WHERE id = $1', [firstWaitlist.rows[0].id]);
+        }
+      }
+      await db.query('DELETE FROM match_checkins WHERE match_id = $1 AND user_id = $2', [matchId, userId]);
+    }
+    
+    res.json({ message: 'Jogador removido da partida.' });
+  } catch(err) {
+    console.error(err);
+    res.status(500).json({ error: 'Erro interno.' });
   }
 });
 

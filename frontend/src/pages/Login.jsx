@@ -15,16 +15,15 @@ export default function Login() {
 
       <div className="relative z-10 flex flex-col items-center max-w-sm w-full">
         {/* Logo */}
-        <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] flex items-center justify-center text-4xl mb-6 shadow-lg">
-          ⚽
+        <div className="flex flex-col items-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_30px_var(--color-accent-glow)] mb-4 animate-bounce-slow">
+            ⚽
+          </div>
+          <h1 className="text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)]">
+            Resenha FC
+          </h1>
+          <p className="text-[var(--color-text-muted)] text-sm font-medium mt-1">A pelada profissional.</p>
         </div>
-
-        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] bg-clip-text text-transparent">
-          FutMatch
-        </h1>
-        <p className="text-[var(--color-text-secondary)] text-center mb-10 text-sm leading-relaxed">
-          Organize suas peladas, monte times equilibrados e acompanhe seu desempenho.
-        </p>
 
         {/* Google Login Button */}
         <button

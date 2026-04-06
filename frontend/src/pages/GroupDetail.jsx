@@ -4,10 +4,12 @@ import api from '../api/client';
 import Loader from '../components/Loader';
 import PlayerCard from '../components/PlayerCard';
 import { MATCH_STATUS } from '../utils/constants';
+import { useAuth } from '../context/AuthContext';
 
 export default function GroupDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [group, setGroup] = useState(null);
   const [members, setMembers] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -115,6 +117,21 @@ export default function GroupDetail() {
     }
   }
 
+  async function removeMember(userId) {
+    const isSelf = user.id === userId;
+    if (!confirm(isSelf ? 'Deseja mesmo sair deste grupo?' : 'Deseja remover este jogador do grupo?')) return;
+    try {
+      await api.delete(`/api/groups/${id}/members/${userId}`);
+      if (isSelf) {
+        navigate('/groups', { replace: true });
+      } else {
+        loadGroup();
+      }
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao remover membro.');
+    }
+  }
+
   if (loading) return <Loader />;
   if (!group) return <div className="pt-20 px-4 text-center text-[var(--color-text-muted)]">Grupo não encontrado.</div>;
 
@@ -144,9 +161,13 @@ export default function GroupDetail() {
         <button onClick={loadRanking} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-warning)]/10 text-[var(--color-warning)] hover:bg-[var(--color-warning)]/20 transition-all cursor-pointer">
           🏆 Ranking
         </button>
-        {myRole === 'owner' && (
+        {myRole === 'owner' ? (
           <button onClick={handleDelete} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-danger)]/10 text-[var(--color-danger)] hover:bg-[var(--color-danger)]/20 transition-all cursor-pointer ml-auto">
             🗑 Excluir
+          </button>
+        ) : (
+          <button onClick={() => removeMember(user.id)} className="px-3 py-2 rounded-xl text-xs font-semibold bg-[var(--color-danger)]/10 text-[var(--color-danger)] hover:bg-[var(--color-danger)]/20 transition-all cursor-pointer ml-auto">
+            🚪 Sair do Grupo
           </button>
         )}
       </div>
@@ -310,6 +331,25 @@ export default function GroupDetail() {
                       ⭐️ Dar Admin
                     </button>
                   )}
+                  {m.user_id !== user.id && (
+                    <button
+                      onClick={() => removeMember(m.user_id)}
+                      className="text-[10px] px-2 py-1.5 rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all font-semibold cursor-pointer shadow-sm"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              )}
+              {/* Admins trying to kick ordinary members */}
+              {myRole === 'admin' && m.role === 'member' && m.user_id !== user.id && (
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-2">
+                    <button
+                      onClick={() => removeMember(m.user_id)}
+                      className="text-[10px] px-3 py-1.5 rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] hover:bg-[var(--color-danger)]/10 transition-all font-semibold cursor-pointer shadow-sm"
+                    >
+                      Expulsar
+                    </button>
                 </div>
               )}
             </div>

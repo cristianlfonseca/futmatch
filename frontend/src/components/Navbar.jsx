@@ -16,10 +16,10 @@ export default function Navbar() {
       {/* Top bar */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--color-bg-secondary)]/80 backdrop-blur-xl border-b border-[var(--color-border)]">
         <div className="max-w-lg mx-auto px-4 h-14 flex items-center justify-between">
-          <Link to="/groups" className="flex items-center gap-2 no-underline">
-            <span className="text-xl">⚽</span>
-            <span className="font-bold text-lg bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)] bg-clip-text text-transparent">
-              FutMatch
+          <Link to="/groups" className="flex items-center gap-2 group no-underline mt-1">
+            <span className="text-2xl drop-shadow-[0_0_8px_var(--color-accent-glow)] group-hover:scale-110 transition-transform">⚽</span>
+            <span className="text-lg font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-gradient-start)] to-[var(--color-gradient-end)]">
+              Resenha FC
             </span>
           </Link>
 

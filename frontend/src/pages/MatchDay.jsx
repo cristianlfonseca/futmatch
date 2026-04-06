@@ -156,6 +156,16 @@ export default function MatchDay() {
     } catch (err) { console.error(err); }
   }
 
+  async function kickPlayer(userId) {
+    if (!confirm('Deseja realmente remover este jogador da partida?')) return;
+    try {
+      await api.delete(`/api/matches/${id}/checkins/${userId}`);
+      loadMatch();
+    } catch (err) {
+      alert(err.response?.data?.error || 'Erro ao remover da partida.');
+    }
+  }
+
   async function handleStartMatch() {
     try {
       await api.post(`/api/matches/${id}/start`);
@@ -501,7 +511,10 @@ export default function MatchDay() {
                       {(p.display_name || p.name || '?')[0]}
                     </div>
                   )}
-                  <span className="text-sm font-medium">{p.display_name || p.name}</span>
+                  <span className="text-sm font-medium flex-1">{p.display_name || p.name}</span>
+                  {isAdmin && p.user_id !== user?.id && (
+                     <button onClick={() => kickPlayer(p.user_id)} className="text-[var(--color-danger)] opacity-70 hover:opacity-100 p-1 font-bold">✕</button>
+                  )}
                 </div>
               ))}
             </div>
@@ -516,7 +529,10 @@ export default function MatchDay() {
           <div className="space-y-2 opacity-70">
             {waitlistPlayers.map((p) => (
               <div key={p.user_id} className="flex items-center gap-2 bg-[var(--color-bg-card)] border border-[var(--color-border)] rounded-lg px-3 py-2">
-                <span className="text-xs font-medium">{p.display_name || p.name}</span>
+                <span className="text-xs font-medium flex-1">{p.display_name || p.name}</span>
+                  {isAdmin && p.user_id !== user?.id && (
+                     <button onClick={() => kickPlayer(p.user_id)} className="text-[var(--color-danger)] opacity-70 hover:opacity-100 p-1 font-bold text-xs">✕</button>
+                  )}
               </div>
             ))}
           </div>

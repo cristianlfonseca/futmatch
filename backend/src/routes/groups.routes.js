@@ -223,4 +223,45 @@ router.post('/api/groups/:id/join', async (req, res) => {
   }
 });
 
+// ---- Remove Member (Kick or Leave) ----
+router.delete('/api/groups/:id/members/:userId', async (req, res) => {
+  const { id: groupId, userId } = req.params;
+  
+  try {
+    const memberCheck = await db.query(
+      'SELECT role FROM group_members WHERE group_id = $1 AND user_id = $2',
+      [groupId, req.user.id]
+    );
+
+    if (!memberCheck.rows[0]) {
+      return res.status(403).json({ error: 'Você não é membro deste grupo.' });
+    }
+
+    const isSelf = req.user.id === userId;
+    const isAdmin = memberCheck.rows[0].role === 'owner' || memberCheck.rows[0].role === 'admin';
+
+    if (!isSelf && !isAdmin) {
+      return res.status(403).json({ error: 'Apenas admins podem remover outros membros.' });
+    }
+
+    if (isSelf && memberCheck.rows[0].role === 'owner') {
+      return res.status(400).json({ error: 'O dono não pode sair. Exclua o grupo ou passe a liderança.' });
+    }
+
+    await db.query('DELETE FROM group_members WHERE group_id = $1 AND user_id = $2', [groupId, userId]);
+    
+    // Cleanup checkins and invites to maintain consistency!
+    await db.query(`
+       DELETE FROM match_checkins 
+       WHERE user_id = $1 AND match_id IN (SELECT id FROM matches WHERE group_id = $2)
+    `, [userId, groupId]);
+    await db.query('DELETE FROM invites WHERE group_id = $1 AND invited_user = $2', [groupId, userId]);
+
+    res.json({ message: isSelf ? 'Você saiu do grupo.' : 'Membro removido.' });
+  } catch (err) {
+    console.error('DELETE /api/groups/:id/members/:userId error:', err);
+    res.status(500).json({ error: 'Erro interno.' });
+  }
+});
+
 module.exports = router;
